@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1a237e;
+        }
+
+        .balance-input {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .balance-input h2 {
+            margin-bottom: 15px;
+            color: #1a237e;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .candle-input {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative; /* For absolute positioning of the candle */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .red-candle-section h2 {
+            margin-bottom: 10px;
+            color: #4caf50; /* Green color for Red Candle Long Position */
+        }
+
+        .green-candle-section h2 {
+            margin-bottom: 10px;
+            color: #e53935; /* Red color for Green Candle Short Position */
+        }
+
+        .candle-input input {
+            width: 100%;
+            padding: 6px; /* Reduced padding */
+            margin-bottom: 6px; /* Reduced margin */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px; /* Reduced font size */
+        }
+
+        .candle-display {
+            position: absolute;
+            top: 10px; /* Adjust top position */
+            right: 10px; /* Position to the right */
+            width: 6px; /* Width of the candle */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: calc(100% - 60px); /* Adjust height to fit within input */
+            justify-content: center; /* Center the candle vertically */
+        }
+
+        .candle-display .wick {
+            background-color: #333;
+            width: 1px;
+        }
+
+        .candle-display .body {
+            border-radius: 1px;
+            width: 6px;
+        }
+
+        .red-candle-section .candle-display .body {
+            background-color: #e53935;
+        }
+
+        .green-candle-section .candle-display .body {
+            background-color: #4caf50;
+        }
+
+        .results {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .result-box {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-box h2 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .result-box p {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .input-section, .results {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trading Calculator</h1>
+
+        <div class="balance-input">
+            <h2>Account Balance</h2>
+            <input type="number" id="balance" placeholder="Available Balance" min="0">
+        </div>
+
+        <div class="input-section">
+            <div class="candle-input red-candle-section">
+                <h2>Red Candle Long Position</h2>
+                <input type="number" id="redHigh" placeholder="High Price">
+                <input type="number" id="redLow" placeholder="Low Price">
+                <div class="candle-display"></div>
+            </div>
+            <div class="candle-input green-candle-section">
+                <h2>Green Candle Short Position</h2>
+                <input type="number" id="greenHigh" placeholder="High Price">
+                <input type="number" id="greenLow" placeholder="Low Price">
+                <div class="candle-display"></div>
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="result-box" style="border-left: 4px solid #4caf50;">
+                <h2>Buy Conditions</h2>
+                <p>Entry: <span id="buyEntry">-</span></p>
+                <p>SL: <span id="buySL">-</span></p>
+                <p>Target: <span id="buyTarget">-</span></p>
+                <p>Quantity: <span id="buyQuantity">-</span></p>
+            </div>
+            <div class="result-box" style="border-left: 4px solid #e53935;">
+                <h2>Sell Conditions</h2>
+                <p>Entry: <span id="sellEntry">-</span></p>
+                <p>SL: <span id="sellSL">-</span></p>
+                <p>Target: <span id="sellTarget">-</span></p>
+                <p>Quantity: <span id="sellQuantity">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputs = document.querySelectorAll('input');
+        const balanceInput = document.getElementById('balance');
+        const buyElements = {
+            entry: document.getElementById('buyEntry'),
+            sl: document.getElementById('buySL'),
+            target: document.getElementById('buyTarget')
+        };
+        const sellElements = {
+            entry: document.getElementById('sellEntry'),
+            sl: document.getElementById('sellSL'),
+            target: document.getElementById('sellTarget')
+        };
+        const buyQuantityElement = document.getElementById('buyQuantity');
+        const sellQuantityElement = document.getElementById('sellQuantity');
+
+        const redCandleDisplay = document.querySelector('.red-candle-section .candle-display');
+        const greenCandleDisplay = document.querySelector('.green-candle-section .candle-display');
+
+        function drawCandle(high, low, displayElement, colorClass) {
+            displayElement.innerHTML = ''; // Clear previous candle
+            if (!isNaN(high) && !isNaN(low)) {
+                const wickTop = document.createElement('div');
+                wickTop.className = 'wick';
+                const wickBottom = document.createElement('div');
+                wickBottom.className = 'wick';
+                const body = document.createElement('div');
+                body.className = 'body';
+
+                const priceDiff = Math.abs(high - low);
+                const wickHeight = priceDiff * 10; // Scale factor for visibility
+                const bodyHeight = Math.max(2, priceDiff * 5); // Dynamic body height
+
+                const highPoint = Math.max(high, low);
+                const lowPoint = Math.min(high, low);
+
+                const totalHeight = displayElement.offsetHeight;
+                if (totalHeight === 0) return; // Avoid division by zero
+
+                const scale = totalHeight / (priceDiff || 1); // Scale based on available height
+
+                const scaledWickHeight = priceDiff * scale;
+                const scaledBodyHeight = Math.max(2, priceDiff * scale * 0.5); // Adjust body scale
+
+                const bodyTopOffset = (highPoint - Math.max(high, low)) * scale + (scaledWickHeight - scaledBodyHeight) / 2;
+
+
+                wickTop.style.height = `${Math.max(0, scaledWickHeight / 2)}px`;
+                wickBottom.style.height = `${Math.max(0, scaledWickHeight / 2)}px`;
+                body.style.height = `${scaledBodyHeight}px`;
+                body.style.marginTop = `${Math.max(0, (scaledWickHeight - scaledBodyHeight) / 2)}px`;
+                body.style.marginBottom = `${Math.max(0, (scaledWickHeight - scaledBodyHeight) / 2)}px`;
+
+
+                displayElement.appendChild(wickTop);
+                displayElement.appendChild(body);
+                displayElement.appendChild(wickBottom);
+
+                // Add color class (for consistency with previous logic)
+                if (colorClass === 'red') {
+                    displayElement.classList.remove('green');
+                    displayElement.classList.add('red');
+                } else if (colorClass === 'green') {
+                    displayElement.classList.remove('red');
+                    displayElement.classList.add('green');
+                }
+            }
+        }
+
+        function updateCalculations() {
+            const balance = parseFloat(balanceInput.value);
+
+            // Calculate Buy conditions
+            const redHigh = parseFloat(document.getElementById('redHigh').value);
+            const redLow = parseFloat(document.getElementById('redLow').value);
+
+            if (!isNaN(redHigh) && !isNaN(redLow)) {
+                const buyEntry = redHigh * 1.0003;
+                const buySL = redLow * 0.9997;
+                const buyTarget = buyEntry + 1.5 * (buyEntry - buySL);
+
+                buyElements.entry.textContent = buyEntry.toFixed(2);
+                buyElements.sl.textContent = buySL.toFixed(2);
+                buyElements.target.textContent = buyTarget.toFixed(2);
+
+                // Calculate Buy Quantity
+                if (!isNaN(balance) && balance > 0 && !isNaN(buyEntry) && buyEntry > 0) {
+                    const buyQty = balance / buyEntry;
+                    buyQuantityElement.textContent = buyQty.toFixed(2);
+                } else {
+                    buyQuantityElement.textContent = '-';
+                }
+            } else {
+                buyElements.entry.textContent = '-';
+                buyElements.sl.textContent = '-';
+                buyElements.target.textContent = '-';
+                buyQuantityElement.textContent = '-';
+            }
+
+            // Calculate Sell conditions
+            const greenHigh = parseFloat(document.getElementById('greenHigh').value);
+            const greenLow = parseFloat(document.getElementById('greenLow').value);
+
+            if (!isNaN(greenHigh) && !isNaN(greenLow)) {
+                const sellEntry = greenLow * 0.9997;
+                const sellSL = greenHigh * 1.0003;
+                const sellTarget = sellEntry - 1.5 * (sellSL - sellEntry);
+
+                sellElements.entry.textContent = sellEntry.toFixed(2);
+                sellElements.sl.textContent = sellSL.toFixed(2);
+                sellElements.target.textContent = sellTarget.toFixed(2);
+
+                // Calculate Sell Quantity
+                if (!isNaN(balance) && balance > 0 && !isNaN(sellEntry) && sellEntry > 0) {
+                    const sellQty = balance / sellEntry;
+                    sellQuantityElement.textContent = sellQty.toFixed(2);
+                } else {
+                    sellQuantityElement.textContent = '-';
+                }
+            } else {
+                sellElements.entry.textContent = '-';
+                sellElements.sl.textContent = '-';
+                sellElements.target.textContent = '-';
+                sellQuantityElement.textContent = '-';
+            }
+        }
+
+        function updateChartDisplay() {
+            const redHigh = parseFloat(document.getElementById('redHigh').value);
+            const redLow = parseFloat(document.getElementById('redLow').value);
+            drawCandle(redHigh, redLow, redCandleDisplay, 'red');
+
+            const greenHigh = parseFloat(document.getElementById('greenHigh').value);
+            const greenLow = parseFloat(document.getElementById('greenLow').value);
+            drawCandle(greenHigh, greenLow, greenCandleDisplay, 'green');
+        }
+
+        function updateAll() {
+            updateCalculations();
+            updateChartDisplay();
+        }
+
+        // Add event listeners
+        inputs.forEach(input => input.addEventListener('input', updateAll));
+        balanceInput.addEventListener('input', updateCalculations);
+        window.addEventListener('resize', updateChartDisplay); // Basic resize for now
+
+        updateAll();
+    </script>
+</body>
+</html>
