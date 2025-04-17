@@ -62,12 +62,10 @@
 
         .red-candle-section h2 {
             margin-bottom: 10px;
-            color: #4caf50; /* Green color for Red Candle Long Position */
         }
 
         .green-candle-section h2 {
             margin-bottom: 10px;
-            color: #e53935; /* Red color for Green Candle Short Position */
         }
 
         .candle-input input {
@@ -134,6 +132,12 @@
             font-size: 1.1em;
         }
 
+        .percentage {
+            font-size: 0.9em;
+            color: #777;
+            margin-left: 5px;
+        }
+
         @media (max-width: 768px) {
             .input-section, .results {
                 flex-direction: column;
@@ -152,13 +156,13 @@
 
         <div class="input-section">
             <div class="candle-input red-candle-section">
-                <h2>Red Candle Long Position</h2>
+                <h2><span style="color: #f44336;">Red</span> <span style="color: #4caf50;">Candle Long Position</span></h2>
                 <input type="number" id="redHigh" placeholder="High Price">
                 <input type="number" id="redLow" placeholder="Low Price">
                 <div class="candle-display"></div>
             </div>
             <div class="candle-input green-candle-section">
-                <h2>Green Candle Short Position</h2>
+                <h2><span style="color: #4caf50;">Green</span> <span style="color: #f44336;">Candle Short Position</span></h2>
                 <input type="number" id="greenHigh" placeholder="High Price">
                 <input type="number" id="greenLow" placeholder="Low Price">
                 <div class="candle-display"></div>
@@ -169,15 +173,15 @@
             <div class="result-box" style="border-left: 4px solid #4caf50;">
                 <h2>Buy Conditions</h2>
                 <p>Entry: <span id="buyEntry">-</span></p>
-                <p>SL: <span id="buySL">-</span></p>
-                <p>Target: <span id="buyTarget">-</span></p>
+                <p>SL: <span id="buySL">-</span> <span id="buySLPct" class="percentage"></span></p>
+                <p>Target: <span id="buyTarget">-</span> <span id="buyTargetPct" class="percentage"></span></p>
                 <p>Quantity: <span id="buyQuantity">-</span></p>
             </div>
             <div class="result-box" style="border-left: 4px solid #e53935;">
                 <h2>Sell Conditions</h2>
                 <p>Entry: <span id="sellEntry">-</span></p>
-                <p>SL: <span id="sellSL">-</span></p>
-                <p>Target: <span id="sellTarget">-</span></p>
+                <p>SL: <span id="sellSL">-</span> <span id="sellSLPct" class="percentage"></span></p>
+                <p>Target: <span id="sellTarget">-</span> <span id="sellTargetPct" class="percentage"></span></p>
                 <p>Quantity: <span id="sellQuantity">-</span></p>
             </div>
         </div>
@@ -189,12 +193,16 @@
         const buyElements = {
             entry: document.getElementById('buyEntry'),
             sl: document.getElementById('buySL'),
-            target: document.getElementById('buyTarget')
+            target: document.getElementById('buyTarget'),
+            slPct: document.getElementById('buySLPct'),
+            targetPct: document.getElementById('buyTargetPct')
         };
         const sellElements = {
             entry: document.getElementById('sellEntry'),
             sl: document.getElementById('sellSL'),
-            target: document.getElementById('sellTarget')
+            target: document.getElementById('sellTarget'),
+            slPct: document.getElementById('sellSLPct'),
+            targetPct: document.getElementById('sellTargetPct')
         };
         const buyQuantityElement = document.getElementById('buyQuantity');
         const sellQuantityElement = document.getElementById('sellQuantity');
@@ -268,6 +276,12 @@
                 buyElements.sl.textContent = buySL.toFixed(2);
                 buyElements.target.textContent = buyTarget.toFixed(2);
 
+                // Calculate and display percentages for Buy
+                const buySLPct = ((buySL - buyEntry) / buyEntry) * 100;
+                const buyTargetPct = ((buyTarget - buyEntry) / buyEntry) * 100;
+                buyElements.slPct.textContent = `${buySLPct.toFixed(2)}%`;
+                buyElements.targetPct.textContent = `${buyTargetPct.toFixed(2)}%`;
+
                 // Calculate Buy Quantity
                 if (!isNaN(balance) && balance > 0 && !isNaN(buyEntry) && buyEntry > 0) {
                     const buyQty = balance / buyEntry;
@@ -279,6 +293,8 @@
                 buyElements.entry.textContent = '-';
                 buyElements.sl.textContent = '-';
                 buyElements.target.textContent = '-';
+                buyElements.slPct.textContent = '';
+                buyElements.targetPct.textContent = '';
                 buyQuantityElement.textContent = '-';
             }
 
@@ -295,6 +311,12 @@
                 sellElements.sl.textContent = sellSL.toFixed(2);
                 sellElements.target.textContent = sellTarget.toFixed(2);
 
+                // Calculate and display percentages for Sell
+                const sellSLPct = ((sellSL - sellEntry) / sellEntry) * 100;
+                const sellTargetPct = ((sellTarget - sellEntry) / sellEntry) * 100;
+                sellElements.slPct.textContent = `${sellSLPct.toFixed(2)}%`;
+                sellElements.targetPct.textContent = `${sellTargetPct.toFixed(2)}%`;
+
                 // Calculate Sell Quantity
                 if (!isNaN(balance) && balance > 0 && !isNaN(sellEntry) && sellEntry > 0) {
                     const sellQty = balance / sellEntry;
@@ -306,6 +328,8 @@
                 sellElements.entry.textContent = '-';
                 sellElements.sl.textContent = '-';
                 sellElements.target.textContent = '-';
+                sellElements.slPct.textContent = '';
+                sellElements.targetPct.textContent = '';
                 sellQuantityElement.textContent = '-';
             }
         }
