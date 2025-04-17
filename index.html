@@ -312,8 +312,8 @@
                 sellElements.target.textContent = sellTarget.toFixed(2);
 
                 // Calculate and display percentages for Sell
-                const sellSLPct = ((sellSL - sellEntry) / sellEntry) * 100;
-                const sellTargetPct = ((sellTarget - sellEntry) / sellEntry) * 100;
+                const sellSLPct = ((sellEntry - sellSL) / sellEntry) * 100;
+                const sellTargetPct = ((sellEntry - sellTarget) / sellEntry) * 100;
                 sellElements.slPct.textContent = `${sellSLPct.toFixed(2)}%`;
                 sellElements.targetPct.textContent = `${sellTargetPct.toFixed(2)}%`;
 
